@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Trading Interface</title>
+</head>
+<body>
+    <div class="container">
+        <h1>BIN IDREES TR BOT</h1>
+        <label for="pair-select">Select Pair:</label>
+        <select id="pair-select">
+            <option value="EUR/USD">EUR/USD</option>
+        </select>
+        <button onclick="fetchSignals()">Show Signals</button>
+        
+        <h2>Signal</h2>
+        <div id="signal-display" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+            <!-- Signal will be displayed here -->
+        </div>
+        
+        <h2>Signals</h2>
+        <table id="signalsTable">
+            <thead>
+                <tr>
+                    <th>Pair</th>
+                    <th>Signal</th>
+                    <th>Current Price</th>
+                    <th>Reason</th>
+                    <th>Take Profit</th>
+                    <th>Stop Loss</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for info in trading_info %}
+                <tr>
+                    <td>{{ info.pair }}</td>
+                    <td class="{{ 'buy' if info.signal == 'buy' else 'sell' }}">{{ info.signal }}</td>
+                    <td>{{ info.current_price }}</td>
+                    <td>{{ info.reason }}</td>
+                    <td>{{ info.tp }}</td>
+                    <td>{{ info.sl }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Historical Signals</h2>
+        <div id="historical-signals" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+            <!-- Historical signals will be displayed here -->
+            {% for signal in historical_signals %}
+            <p>{{ signal }}</p>
+            {% endfor %}
+        </div>
+
+        <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+            <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+            {
+                "autosize": true,
+                "symbol": "BITSTAMP:BTCUSD",
+                "interval": "15",
+                "timezone": "Etc/UTC",
+                "theme": "light",
+                "style": "1",
+                "locale": "en",
+                "withdateranges": true,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "calendar": false,
+                "support_host": "https://www.tradingview.com"
+            }
+            </script>
+        </div>
+        <!-- TradingView Widget END -->
+    </div>
+    <script>
+        function fetchSignals() {
+            // Fetch signals from the server and update the signal display
+            fetch('/signals')
+                .then(response => response.json())
+                .then(data => {
+                    const signalDisplay = document.getElementById('signal-display');
+                    if (data.length > 0) {
+                        const signal = data[0]; // Show only the first signal
+                        signalDisplay.innerHTML = `
+                            <strong>Pair:</strong> ${signal.pair}<br>
+                            <strong>Signal:</strong> ${signal.signal}<br>
+                            <strong>Current Price:</strong> ${signal.current_price}<br>
+                            <strong>Reason:</strong> ${signal.reason}<br>
+                            <strong>Take Profit:</strong> ${signal.tp}<br>
+                            <strong>Stop Loss:</strong> ${signal.sl}
+                        `;
+                    } else {
+                        signalDisplay.innerHTML = 'No signals available.';
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
